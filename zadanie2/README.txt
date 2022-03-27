@@ -1,4 +1,5 @@
-expr      ->    plusminus* EOF ;
+expr      ->    plusminus* EOF 
 plusminus ->    multdiv { ( '+' | '-' ) multdiv } 
 multdiv   ->    factor  { ( '*' | '/' ) factor } 
-factor    ->    NUMBER | '(' expr ')' ;
+factor    ->    [-] factor
+factor    ->    NUMBER | '(' expr ')' 
