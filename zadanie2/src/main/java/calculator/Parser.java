@@ -17,6 +17,8 @@ public class Parser {
 //
 //    multdiv : factor ( ( '*' | '/' ) factor )* ;
 //
+//    factor : [-] factor    
+//
 //    factor : NUMBER | '(' expr ')' ;
 
     private Lexer symbolBuffer;
@@ -41,6 +43,7 @@ public class Parser {
         int position = 0;
         int leftBracket = 0;
         int rightBracket = 0;
+        int checkingSymbols = 0;
 
         while (position < expText.length()) {
             char c = expText.charAt(position);
@@ -48,6 +51,10 @@ public class Parser {
                 case '(':
                     lexemes.add(new Lexeme(Token.LEFT_BRACKET, c));
                     position++;
+                    if(checkingSymbols >= 2) {
+                        throw new CalculatorException("Problem with operations (symbols)");
+                    }
+                    checkingSymbols = 0;
                     leftBracket++;
                     continue;
                 case ')':
@@ -56,20 +63,24 @@ public class Parser {
                     rightBracket++;
                     continue;
                 case '+':
-                    lexemes.add(new Lexeme(Token.OP_PLUS, c));
+                    lexemes.add(new Lexeme(Token.PLUS, c));
                     position++;
+                    checkingSymbols++;
                     continue;
                 case '-':
-                    lexemes.add(new Lexeme(Token.OP_MINUS, c));
+                    lexemes.add(new Lexeme(Token.MINUS, c));
                     position++;
+                    checkingSymbols++;
                     continue;
                 case '*':
-                    lexemes.add(new Lexeme(Token.OP_MUL, c));
+                    lexemes.add(new Lexeme(Token.MUL, c));
                     position++;
+                    checkingSymbols++;
                     continue;
                 case '/':
-                    lexemes.add(new Lexeme(Token.OP_DIV, c));
+                    lexemes.add(new Lexeme(Token.DIV, c));
                     position++;
+                    checkingSymbols++;
                     continue;
                 default:
                     if (c <= '9' && c >= '0') {
@@ -77,6 +88,10 @@ public class Parser {
                         do {
                             sb.append(c);
                             position++;
+                            if(checkingSymbols >= 2) {
+                                throw new CalculatorException("Problem with operations (symbols)");
+                            }
+                            checkingSymbols = 0;
                             if (position >= expText.length()) {
                                 break;
                             }
@@ -91,6 +106,8 @@ public class Parser {
                     }
             }
         }
+
+
         if(leftBracket != rightBracket) {
             throw new CalculatorException("Problem with brackets");
         }
@@ -113,10 +130,10 @@ public class Parser {
         while (true) {
             Lexeme lexeme = lexemes.next();
             switch (lexeme.type) {
-                case OP_PLUS:
+                case PLUS:
                     value += multdiv(lexemes);
                     break;
-                case OP_MINUS:
+                case MINUS:
                     value -= multdiv(lexemes);
                     break;
                 case EOF:
@@ -135,18 +152,18 @@ public class Parser {
         while (true) {
             Lexeme lexeme = lexemes.next();
             switch (lexeme.type) {
-                case OP_MUL:
+                case MUL:
                     value *= factor(lexemes);
                     break;
-                case OP_DIV:
+                case DIV:
                     value /= factor(lexemes);
                     break;
-                case OP_MINUS:
+                case MINUS:
                     lexemes.back();
                     return value -= factor(lexemes);
                 case EOF:
                 case RIGHT_BRACKET:
-                case OP_PLUS:
+                case PLUS:
                     lexemes.back();
                     return value;
                 default:
@@ -159,7 +176,7 @@ public class Parser {
     public static int factor(Lexer lexemes) {
         Lexeme lexeme = lexemes.next();
         switch (lexeme.type) {
-            case OP_MINUS:
+            case MINUS:
                 lexemes.back();
                 return 0;
             case NUMBER:
