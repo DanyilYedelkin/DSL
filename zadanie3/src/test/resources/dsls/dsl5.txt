@@ -1,0 +1,20 @@
+events {
+    next 'n'
+    reset 'r'
+}
+
+resetEvents {
+    reset
+}
+
+commands {
+    printX 'X'
+}
+
+state s1 {
+    next -> s2
+}
+
+state s2 {
+    actions { printX }
+}
